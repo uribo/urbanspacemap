@@ -72,6 +72,7 @@ sf_station <-
 sf_station <-
   sf_station %>%
   filter(stringr::str_detect(operationCompany, "旅客鉄道$"),
+         stringr::str_detect(railwayLineName, "大阪環状線$", negate = TRUE),
          stationName %in% stations) %>%
   group_by(stationName) %>%
   slice(1L) %>%
@@ -124,7 +125,6 @@ if (file.exists(here::here("data/urban_space_osm_highway.rds")) == FALSE) {
   sf_osm_highway <-
     read_rds(here::here("data/urban_space_osm_highway.rds"))
 }
-
 if (file.exists(here::here("data/urban_space_osm_railway.rds")) == FALSE) {
   sf_osm_railway <-
     st_geometry(sf_station_2kmbuffer) %>%
@@ -140,7 +140,6 @@ if (file.exists(here::here("data/urban_space_osm_railway.rds")) == FALSE) {
     read_rds(here::here("data/urban_space_osm_railway.rds"))
 }
 
-
 # 3/3 マッピング ---------------------------------------------------------------
 # route_circple_crop(33)
 if (length(fs::dir_ls(here::here("figures"), regexp = ".png$")) != 47L) {
@@ -152,5 +151,5 @@ if (length(fs::dir_ls(here::here("figures"), regexp = ".png$")) != 47L) {
         pull(description) %>%
         str_replace(" ", "_"),
       ".png"
-    )), route_circple_crop(.x), dpi = 300, width = 11.5, height = 9.94))  
+    )), route_circple_crop(.x), dpi = 300, width = 11.5, height = 9.94))
 }
