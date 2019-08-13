@@ -143,7 +143,7 @@ if (file.exists(here::here("data/urban_space_osm_railway.rds")) == FALSE) {
 
 # 3/3 マッピング ---------------------------------------------------------------
 # route_circple_crop(33)
-if (length(fs::dir_ls(here::here("figures"))) != 46L) {
+if (length(fs::dir_ls(here::here("figures"), regexp = ".png$")) != 47L) {
   seq.int(46) %>%
     walk(~ ggsave(here::here("figures", str_c(
       "urban_space_2km_",

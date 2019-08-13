@@ -466,6 +466,16 @@
       "RemoteSha": "3.1-141",
       "Hash": "be8db89838a17117a4083e72350443e0"
     },
+    "nord": {
+      "Package": "nord",
+      "Version": "0.0.1",
+      "Source": "CRAN",
+      "RemoteType": "standard",
+      "RemoteRef": "nord",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemoteSha": "0.0.1",
+      "Hash": "8e246fa4b622e768e2ca76f9e32f1043"
+    },
     "openssl": {
       "Package": "openssl",
       "Version": "1.4.1",
@@ -485,6 +495,18 @@
       "RemoteRepos": "https://cran.rstudio.com",
       "RemoteSha": "0.1.1",
       "Hash": "861c6f8e646941959aee13a9ce944b4a"
+    },
+    "patchwork": {
+      "Package": "patchwork",
+      "Version": "0.0.1",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteUsername": "thomasp85",
+      "RemoteRepo": "patchwork",
+      "RemoteRef": "master",
+      "RemoteSha": "fd7958bae3e7a1e30237c751952e412a0a1d1242",
+      "RemoteHost": "api.github.com",
+      "Hash": "3bb0c960d9fda08b785576d857832649"
     },
     "pillar": {
       "Package": "pillar",
