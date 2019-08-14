@@ -142,7 +142,7 @@ if (file.exists(here::here("data/urban_space_osm_railway.rds")) == FALSE) {
 
 # 3/3 マッピング ---------------------------------------------------------------
 # route_circple_crop(33)
-if (length(fs::dir_ls(here::here("figures"), regexp = ".png$")) != 47L) {
+if (length(fs::dir_ls(here::here("figures"), regexp = ".png$")) != 49L) {
   seq.int(46) %>%
     walk(~ ggsave(here::here("figures", str_c(
       "urban_space_2km_",
@@ -152,4 +152,63 @@ if (length(fs::dir_ls(here::here("figures"), regexp = ".png$")) != 47L) {
         str_replace(" ", "_"),
       ".png"
     )), route_circple_crop(.x), dpi = 300, width = 11.5, height = 9.94))
+  
+  # renv::install("thomasp85/patchwork")
+  library(patchwork)
+  library(nord)
+  
+  route_circple_crop_blank <- function(pref_no, col1 = "#2E3440", col2 = "#3B4542") {
+    df_pref <- df_prefecture %>%
+      slice(pref_no)
+    cropped_roads <-
+      st_intersection(sf_osm_highway[[pref_no]], sf_station_2kmbuffer[pref_no, ])
+    cropped_roads2 <-
+      st_intersection(sf_osm_railway[[pref_no]], sf_station_2kmbuffer[pref_no, ])
+    bb <-
+      sf_station_2kmbuffer[pref_no, ] %>%
+      st_bbox()
+    scale_line <-
+      c(st_point(c(bb[1], bb[2])),
+        st_point(c(bb[1] + (bb[3] - bb[1]) / 4, bb[2]))) %>%
+      st_cast("LINESTRING") %>%
+      st_sfc(crs = 4326)
+    df_scale <-
+      st_centroid(scale_line) %>%
+      st_coordinates() %>%
+      as.data.frame() %>%
+      mutate(Y = Y + 0.0005,
+             scale = "500m")
+    # plot
+    ggplot() +
+      geom_sf(data = cropped_roads, color = col1, size = 0.35) +
+      geom_sf(data = cropped_roads2, color = col2, size = 0.5) +
+      geom_sf(data = sf_station_2kmbuffer[pref_no, ],
+              fill = "transparent") +
+      coord_sf(datum = NA) +
+      theme_bw(base_family = "TsukuARdGothic-Regular") +
+      theme(rect = element_blank(),
+            axis.title = element_blank()) +
+      labs(title = df_pref %>% pull(description)
+      )
+  }
+  tile_output <- function(prefs, col1 = nord("frost")[1], col2 = nord("frost")[4]) {
+    prefs %>% 
+      purrr::map(
+        ~ route_circple_crop_blank(.x,
+                                   col1 = col1,
+                                   col2 = col2)) %>% 
+      purrr::reduce(`+`) +
+      patchwork::plot_layout(ncol = 5) +
+      patchwork::plot_annotation(theme = theme_bw(base_family = "TsukuARdGothic-Regular"),
+                                 subtitle = "都道府県の県庁所在駅から2km圏の道路および鉄道",
+                                 caption = "@uribo\nSource: \u00a9 国土数値情報 鉄道データ 第2.3版 平成30年度 http://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-v2_3.html,\n\u00a9 OpenStreetMap contributors")
+  }
+  
+  p1east_japan <- 
+    tile_output(seq_len(23), nord("frost")[1], nord("frost")[4])
+  ggsave(here::here("figures/p1_1-23.png"), p1east_japan, width = 12, height = 10, dpi = 300)
+  
+  p2west_japan <- 
+    tile_output(seq.int(24, 46), nord("aurora")[1], nord("aurora")[4])
+  ggsave(here::here("figures/p2_24-46.png"), p2west_japan, width = 12, height = 10, dpi = 300)
 }

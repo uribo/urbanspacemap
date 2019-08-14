@@ -3,10 +3,13 @@
 
 <p align="center"><br>各県の県庁所在駅からの範囲2kmに含まれる道路・鉄道網を可視化しました。<br><img src="figures/tabularmaps.png"></p>
 
+
 ## Source
 
 - 各県の県庁所在駅座標... 国土数値情報 鉄道データ 第2.3版 平成30年度 http://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-v2_3.html
 - 道路・鉄道網... OpenStreetMap contributors
+
+<p align="center"><br><img src="figures/p1_1-23.png" width="400" display="inline-block"> <img src="figures/p2_24-46.png" width="400"></p>
 
 ## Session Info
 
