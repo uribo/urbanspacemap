@@ -2,9 +2,10 @@
 library(osmdata)
 library(tidyverse)
 library(sf)
-# renv::install("uribo/zipangu")
 library(zipangu)
-source("https://gist.githubusercontent.com/uribo/80a94a911b5cc81e5182809f2f8da7a0/raw/12b3269f1fa9cccfdfdda47ea17cd4d1526e353a/jgd2011.R")
+data("jpnprefs", package = "zipangu")
+library(kuniezu)
+# uribo/kuniumi
 
 route_circple_crop <- function(pref_no, col1 = "#2E3440", col2 = "#3B4542") {
   df_pref <- df_prefecture %>%
@@ -63,7 +64,7 @@ stations <-
     "佐賀", "長崎", "熊本", "大分", "宮崎",
     "鹿児島中央")
 sf_station <-
-  read_ksj_n02("~/Documents/resources/国土数値情報/N02/N02-18_GML/N02-18_Station.shp") %>%
+  kuniumi::read_ksj_n02("~/Documents/resources/国土数値情報/N02/N02-18_GML/N02-18_Station.shp") %>%
   sf::st_transform(crs = 6668) %>%
   sf::st_transform(crs = 4326) %>%
   filter(railwayType == "11",
@@ -77,16 +78,14 @@ sf_station <-
   group_by(stationName) %>%
   slice(1L) %>%
   assertr::verify(nrow(.) == 46L) %>%
-  ungroup() %>%
-  transmute(stationName = as_factor(stationName) %>% 
-              fct_relevel(stations),
-            geometry = st_centroid(geometry),
-            srid = recode(st_nearest_feature(geometry, sf_jgd2011_bbox),
-                          !!! sf_jgd2011_bbox %>%
-                            pull(srid) %>%
-                            as.character() %>%
-                            set_names(c(1:19))) %>%
-              as.numeric()) %>%
+  ungroup()
+
+sf_station <-
+  sf_station %>% 
+  mutate(stationName = as_factor(stationName) %>% 
+           fct_relevel(stations),
+         geometry = st_centroid(geometry),
+         srid = st_detect_jgd2011(geometry)) %>% 
   arrange(stationName) %>%
   select(names(.)[!names(.) %in% attr(., "sf_column")])
 
@@ -102,8 +101,9 @@ sf_station_2kmbuffer <-
   ungroup()
 
 df_prefecture <-
-  jpndistrict::jpnprefs %>%
-  select(jis_code, prefecture, region) %>%
+  jpnprefs %>%
+  select(jis_code, prefecture = prefecture_kanji, region) %>%
+  # 沖縄県は除外
   slice(seq.int(46L)) %>%
   bind_cols(sf_station_2kmbuffer %>%
               st_drop_geometry()) %>%
@@ -185,7 +185,8 @@ if (length(fs::dir_ls(here::here("figures"), regexp = ".png$")) != 49L) {
       geom_sf(data = sf_station_2kmbuffer[pref_no, ],
               fill = "transparent") +
       coord_sf(datum = NA) +
-      theme_bw(base_family = "TsukuARdGothic-Regular") +
+      theme_bw(base_family = "TsukuARdGothic-Regular",
+               base_size = 8) +
       theme(rect = element_blank(),
             axis.title = element_blank()) +
       labs(title = df_pref %>% pull(description)
@@ -196,19 +197,19 @@ if (length(fs::dir_ls(here::here("figures"), regexp = ".png$")) != 49L) {
       purrr::map(
         ~ route_circple_crop_blank(.x,
                                    col1 = col1,
-                                   col2 = col2)) %>% 
-      purrr::reduce(`+`) +
+                                   col2 = col2)) %>%
+      patchwork::wrap_plots() +
       patchwork::plot_layout(ncol = 5) +
-      patchwork::plot_annotation(theme = theme_bw(base_family = "TsukuARdGothic-Regular"),
+      patchwork::plot_annotation(theme = theme(text = element_text(family = "TsukuARdGothic-Regular")),
                                  subtitle = "都道府県の県庁所在駅から2km圏の道路および鉄道",
                                  caption = "@uribo\nSource: \u00a9 国土数値情報 鉄道データ 第2.3版 平成30年度 http://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-v2_3.html,\n\u00a9 OpenStreetMap contributors")
   }
   
   p1east_japan <- 
     tile_output(seq_len(23), nord("frost")[1], nord("frost")[4])
-  ggsave(here::here("figures/p1_1-23.png"), p1east_japan, width = 12, height = 10, dpi = 300)
+  ggsave(here::here("figures/p1_1-23.png"), p1east_japan, width = 8, height = 10, dpi = 300)
   
   p2west_japan <- 
     tile_output(seq.int(24, 46), nord("aurora")[1], nord("aurora")[4])
-  ggsave(here::here("figures/p2_24-46.png"), p2west_japan, width = 12, height = 10, dpi = 300)
+  ggsave(here::here("figures/p2_24-46.png"), p2west_japan, width = 8, height = 10, dpi = 300)
 }
